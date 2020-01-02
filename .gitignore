@@ -1,0 +1,9 @@
+# sbt
+bin/
+project/
+target/
+build/
+
+#metals plugin
+.metals/
+.bloop/
