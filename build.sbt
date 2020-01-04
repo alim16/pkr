@@ -20,6 +20,8 @@ version := "1.0"
 // mostly only necessary if you intend to publish your library's binaries on a
 // place like Sonatype or Bintray.
 
+//added for the question mark in types
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
 
 // Want to use a published library in your project?
 // You can define other libraries as dependencies in your build like this:
@@ -29,6 +31,7 @@ libraryDependencies ++= Seq(
     "org.scalactic" %% "scalactic" % "3.0.8",
     "org.scalatest" %% "scalatest" % "3.0.8" % "test",
     "org.postgresql" % "postgresql" % "42.2.4",
+    "org.typelevel" %% "cats-mtl-core" % "0.7.0",
     "co.fs2" %% "fs2-core" % "2.0.0"
  )
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,

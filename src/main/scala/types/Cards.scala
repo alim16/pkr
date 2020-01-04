@@ -64,6 +64,11 @@ trait DeckServiceInterface {
         (deck.tail,card)
     }
 
+    def burnCard(deck: Deck):Deck = {
+        deck.head
+        return deck.tail
+    }
+
  }
 
  object DeckService extends DeckServiceInterface
