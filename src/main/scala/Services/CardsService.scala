@@ -1,7 +1,5 @@
-package pkr
+package pkr.cards
 
-//import cats.kernel.Eq
-//import cats.implicits._
 import scala.util.Random.shuffle
 
 case class Card (rank:Rank,suit:Suit) extends Ordered[Card]{
@@ -16,13 +14,6 @@ case class Card (rank:Rank,suit:Suit) extends Ordered[Card]{
         }
     }
 }
-
-// object eqInstance {
-//     implicit val eqCard:Eq[Card] = Eq.fromUniversalEquals
-
-// }
-
-
 
 sealed trait Suit
 case object Diamond extends Suit
@@ -72,16 +63,3 @@ trait DeckServiceInterface {
  }
 
  object DeckService extends DeckServiceInterface
-
-// Object Suit{
-//     sealed case class Diamonds() extends Suit
-//     sealed case class Hearts() extends Suit
-//     sealed case class Clubs() extends Suit
-//     sealed case class Spades() extends Suit
-// }
-
-
-
-// package object deck {
-//     type Deck = Seq[Card]
-// }

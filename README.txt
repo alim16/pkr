@@ -8,10 +8,12 @@ make the choices. it saves the results of the game and rounds in a postgres db
 - 
 
 #Game state includes
-- number of players with their info (stack, position, startingHand, hand)
+- number of players with their info (stack, position, pocketCards, hand)
 - potAmount
 - current player
+- dealer
 - current round number
+- boardCards: Seq[Card]
 - roundStage // startRound (shiftPositions?, collectBlinds), dealCards, preFlopBets, flop, turn, river, showdown
 - 
 

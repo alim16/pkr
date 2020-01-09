@@ -10,8 +10,13 @@ import cats.mtl.implicits._
 import cats.MonadError
 import cats.mtl.{ApplicativeAsk, MonadState}
 
-import pkr._ //what's a better way to do this
-import pkr.DeckService.{newDeck, shuffleDeck, Deck, drawCard, burnCard}
+import pkr.cards._ //what's a better way to do this
+import pkr.cards.DeckService.{newDeck, shuffleDeck, Deck, drawCard, burnCard}
+
+import pkr.players.PlayerService.{initialisePlayers}
+import pkr.players._
+
+import pkr.hands.Hands.{Hand}
 
 
 //https://efekahraman.github.io/2019/07/monad-transformers-and-cats-mtl
@@ -24,18 +29,27 @@ package object mainPackage {
   type GameResult = GameState
   type EitherFailure[A] = Failure Either A
   type Db = String
-  case class Player(name:String,hand:Hand,stackAmount:Int) //add PlayerTypes for playerType
+
+  case class GameInfo(
+     initialNumberOfPlayers: Int,
+     currentRoundNumber: Int,
+     dbConnectionString: Db, //TODO: just a test remove later
+     roundWinner: Option[Seq[Player]], //TODO: maybe add to roundInfo
+  )
+
+  case class RoundInfo(
+    currentPlayers: Seq[Player],
+    //dealer: Player,
+    // currentDeck: Deck,
+    currentDeckLength: Int, //TODO: remove later, just for testing 
+    potAmount: Double,
+    boardCards: Seq[Card],
+    roundStage: String, // (shiftPositions, collectBlinds, dealCards, preFlopBets, flop, turn, river, showdown)
+  )
 
   case class GameState (
-    numberOfPlayers: Int,
-    currentPlayers: Seq[Player],
-    winner: Option[Player],
-    currentDeckLength: Int,
-    // currentDeck: Deck,
-    potAmount: Double,
-    currentRoundNumber: Int,
-    roundStage: String, // (shiftPositions, collectBlinds, dealCards, preFlopBets, flop, turn, river, showdown)
-    dbConnectionString: Db, //just a test remove later
+    gameInfo: GameInfo,
+    roundInfo: RoundInfo
   )
 
   type ReaderTEither[A, B] = ReaderT[EitherFailure, A, B]
@@ -48,18 +62,20 @@ package object mainPackage {
               A: ApplicativeAsk[F, Db],
               E: MonadError[F, Failure]
       ): F[GameResult] = for {
+      _ <- S.modify(modState_emptyDeck(_))
       resultState <- S.get
       readval <- A.reader(_.s.map(s => s))
-      // count       =  queryCounts.getOrElse(id, 0L) + 1L
-      // _           <- S.set(queryCounts + (id -> count))
-      // result      <- E.rethrow(A.reader(_.user(id).map(u => (u, count))))
-    } yield resultState
+    
+    } yield resultState //.copy(currentDeckLength=0)
+
+    def modState_emptyDeck(state:GameState):GameState = {
+      state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
+    }
 
     //import cats.mtl.implicits._
     def materialisedGame(nRounds:Int) = game[StateT[ReaderT[EitherFailure, Db, ?],GameState,?]](nRounds)
   }
 
-  type Hand = Seq[Card]
   //type GameResult = (Player, Hand)
 
   val suits = Seq(Diamond, Heart, Club, Spade)
@@ -71,17 +87,26 @@ package object mainPackage {
 
 import mainPackage._
 object Program extends App with PkrService{
-  //type Game[A] = StateT[IO,Deck,A]
-  val initialState: GameState = GameState(
-    numberOfPlayers = 0, //start with 4 players later
-    currentPlayers = Seq(), //need to add all players at start
-    winner = None,
+
+  val gameInfo = GameInfo(
+     initialNumberOfPlayers = 4,
+     currentRoundNumber = 1,
+     roundWinner = None,
+     dbConnectionString = ""
+  )
+
+  val roundInfo: RoundInfo = RoundInfo(
+    currentPlayers = initialisePlayers(4), //need to add all players at start
     currentDeckLength = 52,
     // currentDeck = shuffledDeck,
     potAmount = 0,
-    currentRoundNumber = 1,
-    roundStage = "startRound", //  startRound (shiftPositions?, collectBlinds), dealCards, preFlopBets, flop, turn, river, showdown
-    dbConnectionString = "",
+    boardCards = Seq(),
+    roundStage = "startRound"
+  )
+
+  //type Game[A] = StateT[IO,Deck,A]
+  val initialState: GameState = GameState(
+    gameInfo=gameInfo, roundInfo=roundInfo
   )
   
   def result: StateTReaderTEither[Db, GameResult] = for {
