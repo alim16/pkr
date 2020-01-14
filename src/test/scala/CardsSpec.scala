@@ -1,5 +1,5 @@
 import org.scalatest._
-import pkr._ //make a package for card
+import pkr.cards._
 
 class CardSpec extends FlatSpec {
 
@@ -10,10 +10,10 @@ class CardSpec extends FlatSpec {
       val three = Card(Three,Diamond) 
       assert(jack > ten)
       assert(three < ten)
-      assertResult(false){
-          jack > jack
-      }
-      //assert(stack.pop() === 1)
+      assert(jack == jack2)
+      // assertResult(false){
+      //     jack < jack2
+      // }
     }
   
 }  

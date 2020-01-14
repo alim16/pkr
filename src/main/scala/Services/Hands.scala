@@ -14,7 +14,8 @@ trait HandsInterface {
 
     def compareTwoHands(hand1: Hand, hand2: Hand): Hand = ???
 
-    def sortHand(hand:Hand):Hand = ??? //just sort the cards in the hand
+    //TODO: check if this is correct
+    def sortHand(hand:Hand):Hand = return hand.sortBy(_.rank.value) 
     
 }
 

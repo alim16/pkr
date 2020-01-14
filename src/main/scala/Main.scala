@@ -18,7 +18,7 @@ import pkr.players._
 
 import pkr.hands.Hands.{Hand}
 
-
+//https://medium.com/rahasak/doobie-and-cats-effects-d01230be5c38
 //https://efekahraman.github.io/2019/07/monad-transformers-and-cats-mtl
 //https://www.slideshare.net/RyanAdams12/jamie-pullar-cats-mtl-in-action
 
@@ -72,11 +72,8 @@ package object mainPackage {
       state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
     }
 
-    //import cats.mtl.implicits._
     def materialisedGame(nRounds:Int) = game[StateT[ReaderT[EitherFailure, Db, ?],GameState,?]](nRounds)
   }
-
-  //type GameResult = (Player, Hand)
 
   val suits = Seq(Diamond, Heart, Club, Spade)
   val ranks = Seq(Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace)
