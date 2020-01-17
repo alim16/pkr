@@ -16,6 +16,8 @@ name := "pkr"
 organization := "ch.epfl.scala"
 version := "1.0"
 
+lazy val doobieVersion = "0.8.8"
+
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a
 // place like Sonatype or Bintray.
@@ -28,11 +30,14 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVers
 libraryDependencies ++= Seq(
     "org.typelevel" %% "cats-core" % "2.0.0-RC1",
     "org.typelevel" %% "cats-effect" % "2.0.0",
+    "org.typelevel" %% "cats-mtl-core" % "0.7.0",
     "org.scalactic" %% "scalactic" % "3.0.8",
     "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-    "org.postgresql" % "postgresql" % "42.2.4",
-    "org.typelevel" %% "cats-mtl-core" % "0.7.0",
-    "co.fs2" %% "fs2-core" % "2.0.0"
+    "org.tpolecat" %% "doobie-core" % doobieVersion,
+    "org.tpolecat" %% "doobie-postgres" % doobieVersion,
+    "org.tpolecat" %% "doobie-specs2"   % doobieVersion
+    //"org.postgresql" % "postgresql" % "42.2.4",
+    //"co.fs2" %% "fs2-core" % "2.0.0"
  )
 // Here, `libraryDependencies` is a set of dependencies, and by using `+=`,
 // we're adding the cats dependency to the set of dependencies that sbt will go

@@ -18,7 +18,9 @@ import pkr.players._
 
 import pkr.hands.Hands.{Hand}
 
+//https://www.beyondthelines.net/programming/introduction-to-tagless-final/
 //https://medium.com/rahasak/doobie-and-cats-effects-d01230be5c38
+// https://www.rea-group.com/blog/a-journey-into-extensible-effects-in-scala/
 //https://efekahraman.github.io/2019/07/monad-transformers-and-cats-mtl
 //https://www.slideshare.net/RyanAdams12/jamie-pullar-cats-mtl-in-action
 
@@ -62,9 +64,9 @@ package object mainPackage {
               A: ApplicativeAsk[F, Db],
               E: MonadError[F, Failure]
       ): F[GameResult] = for {
-      _ <- S.modify(modState_emptyDeck(_))
-      resultState <- S.get
-      readval <- A.reader(_.s.map(s => s))
+        _ <- S.modify(modState_emptyDeck(_))
+        resultState <- S.get
+        readval <- A.reader(_.s.map(s => s))
     
     } yield resultState //.copy(currentDeckLength=0)
 
@@ -85,14 +87,14 @@ package object mainPackage {
 import mainPackage._
 object Program extends App with PkrService{
 
-  val gameInfo = GameInfo(
+  val initGameInfo = GameInfo(
      initialNumberOfPlayers = 4,
      currentRoundNumber = 1,
      roundWinner = None,
      dbConnectionString = ""
   )
 
-  val roundInfo: RoundInfo = RoundInfo(
+  val initRoundInfo: RoundInfo = RoundInfo(
     currentPlayers = initialisePlayers(4), //need to add all players at start
     currentDeckLength = 52,
     // currentDeck = shuffledDeck,
@@ -103,7 +105,7 @@ object Program extends App with PkrService{
 
   //type Game[A] = StateT[IO,Deck,A]
   val initialState: GameState = GameState(
-    gameInfo=gameInfo, roundInfo=roundInfo
+    gameInfo=initGameInfo, roundInfo=initRoundInfo
   )
   
   def result: StateTReaderTEither[Db, GameResult] = for {
