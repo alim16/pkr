@@ -7,7 +7,7 @@ import cats.mtl.MonadState
 import cats.mtl.implicits._
 
 import cats.MonadError
-import cats.mtl.{ApplicativeAsk, MonadState}
+import cats.mtl.{ApplicativeAsk, MonadState, FunctorRaise}
 
 import pkr.players._
 import pkr.cards._
@@ -51,10 +51,10 @@ package object gameTypes {
 trait GameServiceInterface{
     import pkr.game.gameTypes._
 
-    def game[F[_]](nRounds: Int)(
+    def game[F[_]:Monad](nRounds: Int)(
       implicit S: MonadState[F, GameState],
               A: ApplicativeAsk[F, Db],
-              E: MonadError[F, Failure]
+              E: FunctorRaise[F, Failure]
       ): F[GameState] = {
           val n = nRounds
           for {
@@ -62,10 +62,11 @@ trait GameServiceInterface{
             _ <- S.modify(modState_incrementRound(_))
             state <- S.get
             _ <- state.gameInfo.currentRoundNumber match {
-                case 5 => S.get //TODO: change this to use nRounds param
-                case _ => game(state.gameInfo.currentRoundNumber)
-            }
+                    case 2 => S.get //TODO: change this to use nRounds param
+                    case _ => game[F](state.gameInfo.currentRoundNumber)
+                }
             readval <- A.reader(_.s.map(s => s))
+            //resultState <- E.raise[GameState](Failure("problem!"))
             resultState <- S.get
         } yield resultState //.copy(currentDeckLength=0)
 

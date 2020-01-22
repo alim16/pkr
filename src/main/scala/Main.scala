@@ -69,9 +69,10 @@ object Program extends App with PkrService{
    val g3 = Program.result.run((initialState)).run("someText")
   
   //TODO: do the unsafe IO thing here //something.unsafeRunSync() //might require some type changes
-  // g3.map(x => println(x._2))
+  g3.map(x => println(x._2))
+  // println(g3)
 
-  import pkr.db.DbService.{getValue}
-  getValue.unsafeRunSync
+  // import pkr.db.DbService.{getValue}
+  // getValue.unsafeRunSync
 }
   
