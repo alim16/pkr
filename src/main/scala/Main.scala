@@ -29,7 +29,7 @@ import pkr.game.gameTypes._ //{GameResult, GameState, Db, Failure}
 package object mainPackage {
   trait PkrService {
     import pkr.game.GameService.{game}
-    def materialisedGame(nRounds:Int) = game[StateT[ReaderT[EitherFailure, Db, ?],GameState,?]](nRounds)
+    def materialisedGame(nRounds:Int) = game[StateTReaderTEither](nRounds)
   }
 }
 
@@ -63,14 +63,15 @@ object Program extends App with PkrService{
   val deck:Deck = newDeck(ranks,suits)
   val shuffledDeck = shuffleDeck(deck)
 
-  def result: StateTReaderTEither[Db, GameState] = for {
+  def result: StateTReaderTEither[GameState] = for {
       res  <- materialisedGame(5)
   } yield res
-   val g3 = Program.result.run((initialState)).run("someText")
-  
+   val gameRes = Program.result.run((initialState)).run("someText")
+   gameRes.value.unsafeRunSync()
+
   //TODO: do the unsafe IO thing here //something.unsafeRunSync() //might require some type changes
-  g3.map(x => println(x._2))
-  // println(g3)
+  //gameRes.map(x => println(x._2))
+ 
 
   // import pkr.db.DbService.{getValue}
   // getValue.unsafeRunSync

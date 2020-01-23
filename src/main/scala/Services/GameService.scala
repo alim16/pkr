@@ -1,5 +1,7 @@
 package pkr.game
 
+//import cats.effect.{IO,LiftIO}
+import cats.effect._
 import cats._
 import cats.data._
 import cats.implicits._
@@ -15,14 +17,15 @@ import pkr.cards._
 //import pkr.main.mainPackage.{GameResult, GameState, Db, Failure} //TODO: change, this is stupid
 
 package object gameTypes {
- final case class Failure(message: String)
+ sealed case class Failure()
+
 
   type GameResult = GameState
-  type EitherFailure[A] = Failure Either A
+  type EitherFailure[A] = EitherT[IO, Failure,  A]
   type Db = String
 
-  type ReaderTEither[A, B] = ReaderT[EitherFailure, A, B]
-  type StateTReaderTEither[A, B] = StateT[ReaderTEither[A, ?], GameState, B]
+  type ReaderTEither[A] = ReaderT[EitherFailure,Db, A]
+  type StateTReaderTEither[A] = StateT[ReaderTEither, GameState, A]
 
   case class GameInfo(
      initialNumberOfPlayers: Int,
@@ -51,7 +54,7 @@ package object gameTypes {
 trait GameServiceInterface{
     import pkr.game.gameTypes._
 
-    def game[F[_]:Monad](nRounds: Int)(
+    def game[F[_]: Monad: LiftIO](nRounds: Int)(
       implicit S: MonadState[F, GameState],
               A: ApplicativeAsk[F, Db],
               E: FunctorRaise[F, Failure]
@@ -67,7 +70,10 @@ trait GameServiceInterface{
                 }
             readval <- A.reader(_.s.map(s => s))
             //resultState <- E.raise[GameState](Failure("problem!"))
+            //resultState <- E.raise[GameState](someError())
             resultState <- S.get
+            _ <- IO(println("printing something#####")).to[F]
+            _ <- IO(println(resultState)).to[F]
         } yield resultState //.copy(currentDeckLength=0)
 
       }
