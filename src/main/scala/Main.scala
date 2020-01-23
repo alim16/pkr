@@ -66,7 +66,7 @@ object Program extends App with PkrService{
   def result: StateTReaderTEither[GameState] = for {
       res  <- materialisedGame(5)
   } yield res
-   val gameRes = Program.result.run((initialState)).run("someText")
+   val gameRes = Program.result.run((initialState)).run("some config info")
    gameRes.value.unsafeRunSync()
 
   //TODO: do the unsafe IO thing here //something.unsafeRunSync() //might require some type changes

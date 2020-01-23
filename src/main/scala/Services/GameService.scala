@@ -62,27 +62,38 @@ trait GameServiceInterface{
           val n = nRounds
           for {
             _ <- S.modify(modState_emptyDeck(_))
-            _ <- S.modify(modState_incrementRound(_))
             state <- S.get
+            _ <- runRound[F]()
             _ <- state.gameInfo.currentRoundNumber match {
-                    case 2 => S.get //TODO: change this to use nRounds param
+                    case 5 => S.get //TODO: change this to use nRounds param
                     case _ => game[F](state.gameInfo.currentRoundNumber)
                 }
             readval <- A.reader(_.s.map(s => s))
             //resultState <- E.raise[GameState](Failure("problem!"))
             //resultState <- E.raise[GameState](someError())
             resultState <- S.get
-            _ <- IO(println("printing something#####")).to[F]
-            _ <- IO(println(resultState)).to[F]
+            _ <- IO(println("####value from the reader is: "+readval)).to[F]
         } yield resultState //.copy(currentDeckLength=0)
+    }
 
-      }
+    def runRound[F[_]: Monad: LiftIO]()(
+      implicit S: MonadState[F, GameState],
+              E: FunctorRaise[F, Failure]
+      ): F[GameState] = {
+      for{
+          currentState <- S.get
+          _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
+          _ <- S.modify(modState_incrementRound(_))
+          res <- S.get
+          _ <- IO(println(res)).to[F]
+      } yield res
+    }
 
     def modState_emptyDeck(state:GameState):GameState = {
-    state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
+      state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
     }
     def modState_incrementRound(state:GameState):GameState = {
-    state.copy(gameInfo=state.gameInfo.copy(currentRoundNumber=state.gameInfo.currentRoundNumber+1))
+      state.copy(gameInfo=state.gameInfo.copy(currentRoundNumber=state.gameInfo.currentRoundNumber+1))
     }
 }
 
