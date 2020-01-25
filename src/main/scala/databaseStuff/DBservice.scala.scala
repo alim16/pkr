@@ -14,7 +14,6 @@ import cats.mtl.implicits._
 import cats.MonadError
 import cats.mtl.{ApplicativeAsk, MonadState}
 
-//TODO: maybe remove below 2 if not needed
 import cats.effect.IO
 import scala.concurrent.ExecutionContext
 
@@ -32,8 +31,9 @@ trait DbServiceInterface {
     val xa = Transactor.fromDriverManager[IO](
   "org.postgresql.Driver", "jdbc:postgresql://localhost:5432/postgres", "postgres", "docker")
 
-    def getValue() = SQL.dropTable.run.transact(xa)
-    //def getValue() = SQL.insertGameInfo(4,"test",5).run.transact(xa)
+    //def getValue() = SQL.dropTable.run.transact(xa)
+    def insertValues(nPlayers: Int,winnerName: String, numberOfRounds: Int) = 
+        SQL.insertGameInfo(nPlayers,winnerName,numberOfRounds).run.transact(xa)//.unsafeRunSync()
 }
 
 object DbService extends DbServiceInterface

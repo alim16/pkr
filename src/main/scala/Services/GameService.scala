@@ -53,6 +53,7 @@ package object gameTypes {
 
 trait GameServiceInterface{
     import pkr.game.gameTypes._
+    import pkr.db.DbService.{insertValues}
 
     def game[F[_]: Monad: LiftIO](nRounds: Int)(
       implicit S: MonadState[F, GameState],
@@ -65,7 +66,7 @@ trait GameServiceInterface{
             state <- S.get
             _ <- runRound[F]()
             _ <- state.gameInfo.currentRoundNumber match {
-                    case 5 => S.get //TODO: change this to use nRounds param
+                    case 2 => S.get //TODO: change this to use nRounds param
                     case _ => game[F](state.gameInfo.currentRoundNumber)
                 }
             readval <- A.reader(_.s.map(s => s))
@@ -73,6 +74,8 @@ trait GameServiceInterface{
             //resultState <- E.raise[GameState](someError())
             resultState <- S.get
             _ <- IO(println("####value from the reader is: "+readval)).to[F]
+            _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "chickenDinner",
+                    state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
         } yield resultState //.copy(currentDeckLength=0)
     }
 
@@ -80,13 +83,13 @@ trait GameServiceInterface{
       implicit S: MonadState[F, GameState],
               E: FunctorRaise[F, Failure]
       ): F[GameState] = {
-      for{
-          currentState <- S.get
-          _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
-          _ <- S.modify(modState_incrementRound(_))
-          res <- S.get
-          _ <- IO(println(res)).to[F]
-      } yield res
+        for{
+            currentState <- S.get
+            _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
+            _ <- S.modify(modState_incrementRound(_))
+            res <- S.get
+            _ <- IO(println(res)).to[F]
+        } yield res
     }
 
     def modState_emptyDeck(state:GameState):GameState = {

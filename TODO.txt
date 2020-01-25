@@ -1,0 +1,15 @@
+1) add monicle to improve copying state
+
+2) create state machine for round stages
+
+3) add random generator to state
+
+4) improve print of gameState
+
+5) fix tests
+
+6) improve documentation add a draw.io diagram
+
+
+*fix equality of cards (for sorting only rank matters)
+*consider using akka actors for players
