@@ -7,9 +7,13 @@ import cats.data._
 import cats.implicits._
 import cats.mtl.MonadState
 import cats.mtl.implicits._
+import cats.{Monoid, MonoidK}
 
 import cats.MonadError
 import cats.mtl.{ApplicativeAsk, MonadState, FunctorRaise}
+
+import monocle.macros.GenLens
+import monocle.Lens
 
 import pkr.players._
 import pkr.cards._
@@ -64,21 +68,18 @@ trait GameServiceInterface{
           for {
             _ <- S.modify(modState_emptyDeck(_))
             state <- S.get
-            _ <- runRound[F]()
-            _ <- state.gameInfo.currentRoundNumber match {
-                    case 2 => S.get //TODO: change this to use nRounds param
-                    case _ => game[F](state.gameInfo.currentRoundNumber)
-                }
+           _ <- repeatNtimes(runRound[F],5)
             readval <- A.reader(_.s.map(s => s))
             //resultState <- E.raise[GameState](Failure("problem!"))
             //resultState <- E.raise[GameState](someError())
             resultState <- S.get
             _ <- IO(println("####value from the reader is: "+readval)).to[F]
-            _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "chickenDinner",
-                    state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
-        } yield resultState //.copy(currentDeckLength=0)
+           // _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "c3po",
+             //       state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
+        } yield resultState
     }
 
+ 
     def runRound[F[_]: Monad: LiftIO]()(
       implicit S: MonadState[F, GameState],
               E: FunctorRaise[F, Failure]
@@ -93,10 +94,26 @@ trait GameServiceInterface{
     }
 
     def modState_emptyDeck(state:GameState):GameState = {
-      state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
+      val gameInfo   : Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
+      val deckLength : Lens[RoundInfo,Int] = GenLens[RoundInfo](_.currentDeckLength)
+      (deckLength compose gameInfo ).set( 0)(state)
+      ///state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
     }
     def modState_incrementRound(state:GameState):GameState = {
-      state.copy(gameInfo=state.gameInfo.copy(currentRoundNumber=state.gameInfo.currentRoundNumber+1))
+      val gameInfo   : Lens[GameState, GameInfo] = GenLens[GameState](_.gameInfo)
+      val currentRound : Lens[GameInfo,Int] = GenLens[GameInfo](_.currentRoundNumber)
+      (currentRound compose gameInfo ).modify(_ + 1)(state)
+    }
+
+    def repeatNtimes[F[_]: Monad](f: () => F[GameState], n: Int)( //TODO: replace this function with something decent
+      implicit S: MonadState[F, GameState]): F[GameState]= { 
+      n match {
+        case n if n <= 1 => for {s <- S.get} yield s  
+        case _ => for {
+          _ <- repeatNtimes(f,n-1)
+          res <- f()
+        } yield res
+      }
     }
 }
 

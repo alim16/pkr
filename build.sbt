@@ -17,6 +17,7 @@ organization := "ch.epfl.scala"
 version := "1.0"
 
 lazy val doobieVersion = "0.8.8"
+val monocleVersion = "2.0.0" // depends on cats 2.x
 
 // Note, it's not required for you to define these three settings. These are
 // mostly only necessary if you intend to publish your library's binaries on a
@@ -24,6 +25,7 @@ lazy val doobieVersion = "0.8.8"
 
 //added for the question mark in types
 addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
+// addCompilerPlugin("org.scalamacros" %% "paradise" % "2.1.1" cross CrossVersion.full)
 
 // Want to use a published library in your project?
 // You can define other libraries as dependencies in your build like this:
@@ -35,7 +37,10 @@ libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.8" % "test",
     "org.tpolecat" %% "doobie-core" % doobieVersion,
     "org.tpolecat" %% "doobie-postgres" % doobieVersion,
-    "org.tpolecat" %% "doobie-specs2"   % doobieVersion
+    "org.tpolecat" %% "doobie-specs2"   % doobieVersion,
+    "com.github.julien-truffaut" %%  "monocle-core"  % monocleVersion,
+    "com.github.julien-truffaut" %%  "monocle-macro" % monocleVersion,
+    "com.github.julien-truffaut" %%  "monocle-law"   % monocleVersion % "test"
     //"org.postgresql" % "postgresql" % "42.2.4",
     //"co.fs2" %% "fs2-core" % "2.0.0"
  )
