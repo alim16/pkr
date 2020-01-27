@@ -1,3 +1,8 @@
+NOTES from jamie:
+*change "package object gameTypes" to just object
+* use drawCard function with option return value
+* move all of the reader, MonadState, ApplicativeAsk, into the types square brackets (will need imports), see example below
+
 1) add monicle to improve copying state
 
 2) create state machine for round stages
@@ -13,3 +18,23 @@
 
 *fix equality of cards (for sorting only rank matters)
 *consider using akka actors for players
+
+
+
+
+
+unfinished changes by jamie
+ def runRound[F[_]: Monad: LiftIO : MonadState[?[_], GameState]()(
+      implicit S: MonadState[F, GameState],
+              E: FunctorRaise[F, Failure]
+      ): F[GameState] = {
+        import cats.MonadState._
+        for{
+            currentState <- get
+            _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
+            _ <- S.modify(modState_incrementRound(_))
+            _ <- S.modify(modState_updateBoardCards(_))
+            res <- S.get
+            _ <- IO(println(res)).to[F]
+        } yield res
+    }

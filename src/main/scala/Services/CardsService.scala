@@ -1,6 +1,7 @@
 package pkr.cards
 
-import scala.util.Random.shuffle
+//import scala.util.Random.shuffle
+import scala.util.Random
 
 case class Card (rank:Rank,suit:Suit) extends Ordered[Card]{
     //isFaceCard: Boolean
@@ -48,8 +49,13 @@ trait DeckServiceInterface {
         r <- ranks
     } yield Card(r,s)
 
-    def shuffleDeck(deck: Deck):Deck = shuffle(deck) //not shufflling correctly
+    def shuffleDeck(deck: Deck, randGen:Random):Deck = randGen.shuffle(deck) //not shufflling correctly
     
+    def drawCard:Function[Deck, Option[(Deck, Card)]] = { //new  version
+        case head +: tail => Some(tail, head)
+        case _ => None
+    }
+
     def drawCard(deck: Deck):(Deck,Card) = {
         val card = deck.head
         (deck.tail,card)

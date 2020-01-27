@@ -7,22 +7,23 @@ import cats.data._
 import cats.implicits._
 import cats.mtl.MonadState
 import cats.mtl.implicits._
-import cats.{Monoid, MonoidK}
+import cats.{Monoid, MonoidK} //TODO: not used, remove
 
 import cats.MonadError
 import cats.mtl.{ApplicativeAsk, MonadState, FunctorRaise}
 
 import monocle.macros.GenLens
 import monocle.Lens
+import scala.util.Random
 
 import pkr.players._
 import pkr.cards._
+import pkr.cards.DeckService.{newDeck, shuffleDeck, Deck, drawCard}
 
 //import pkr.main.mainPackage.{GameResult, GameState, Db, Failure} //TODO: change, this is stupid
 
 package object gameTypes {
- sealed case class Failure()
-
+  sealed case class Failure()
 
   type GameResult = GameState
   type EitherFailure[A] = EitherT[IO, Failure,  A]
@@ -41,7 +42,7 @@ package object gameTypes {
   case class RoundInfo(
     currentPlayers: Seq[Player],
     //dealer: Player,
-    // currentDeck: Deck,
+    //currentDeck: Deck,
     currentDeckLength: Int, //TODO: remove later, just for testing 
     potAmount: Double,
     boardCards: Seq[Card],
@@ -50,7 +51,8 @@ package object gameTypes {
 
   case class GameState (
     gameInfo: GameInfo,
-    roundInfo: RoundInfo
+    roundInfo: RoundInfo,
+    randGen: Random
   )
 }
 
@@ -74,8 +76,8 @@ trait GameServiceInterface{
             //resultState <- E.raise[GameState](someError())
             resultState <- S.get
             _ <- IO(println("####value from the reader is: "+readval)).to[F]
-           // _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "c3po",
-             //       state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
+            _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "someName",
+                      state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
         } yield resultState
     }
 
@@ -88,21 +90,31 @@ trait GameServiceInterface{
             currentState <- S.get
             _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
             _ <- S.modify(modState_incrementRound(_))
+            _ <- S.modify(modState_updateBoardCards(_))
             res <- S.get
             _ <- IO(println(res)).to[F]
         } yield res
     }
 
-    def modState_emptyDeck(state:GameState):GameState = {
-      val gameInfo   : Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
-      val deckLength : Lens[RoundInfo,Int] = GenLens[RoundInfo](_.currentDeckLength)
-      (deckLength compose gameInfo ).set( 0)(state)
-      ///state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) //TODO: change this to actually empty the card deck
+    def modState_emptyDeck(state:GameState):GameState = {//TODO: change this to actually empty the card deck
+      val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
+      val deckLength: Lens[RoundInfo,Int] = GenLens[RoundInfo](_.currentDeckLength)
+      (deckLength compose roundInfo ).set( 0)(state)
+      ///state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) 
     }
     def modState_incrementRound(state:GameState):GameState = {
-      val gameInfo   : Lens[GameState, GameInfo] = GenLens[GameState](_.gameInfo)
-      val currentRound : Lens[GameInfo,Int] = GenLens[GameInfo](_.currentRoundNumber)
+      val gameInfo: Lens[GameState, GameInfo] = GenLens[GameState](_.gameInfo)
+      val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
+      val currentRound: Lens[GameInfo,Int] = GenLens[GameInfo](_.currentRoundNumber)
       (currentRound compose gameInfo ).modify(_ + 1)(state)
+    }
+
+    def modState_updateBoardCards(state:GameState):GameState = { //TODO: drawCards from deck and update deck
+      val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
+      val boardCards: Lens[RoundInfo,Seq[Card]] = GenLens[RoundInfo](_.boardCards)
+      val cardList: Seq[Card] = List(Card(Three,Heart), Card(Jack, Diamond), Card(Ten,Club))
+     // val someCards: Seq[Card] = List(drawCard(state.roundInfo.currentDeck)._2)
+      (boardCards compose roundInfo ).set(state.randGen.shuffle(cardList))(state)
     }
 
     def repeatNtimes[F[_]: Monad](f: () => F[GameState], n: Int)( //TODO: replace this function with something decent

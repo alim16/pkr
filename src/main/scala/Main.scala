@@ -10,8 +10,9 @@ import cats.mtl.implicits._
 import cats.MonadError
 import cats.mtl.{ApplicativeAsk, MonadState}
 
-import pkr.cards._ //what's a better way to do this
+import pkr.cards._
 import pkr.cards.DeckService.{newDeck, shuffleDeck, Deck, drawCard, burnCard}
+import scala.util.Random
 
 import pkr.players.PlayerService.{initialisePlayers}
 import pkr.players._
@@ -47,7 +48,7 @@ object Program extends App with PkrService{
   val initRoundInfo: RoundInfo = RoundInfo(
     currentPlayers = initialisePlayers(4), //need to add all players at start
     currentDeckLength = 52,
-    // currentDeck = shuffledDeck,
+   // currentDeck = shuffledDeck,
     potAmount = 0,
     boardCards = Seq(),
     roundStage = "startRound"
@@ -55,13 +56,16 @@ object Program extends App with PkrService{
 
   //type Game[A] = StateT[IO,Deck,A]
   val initialState: GameState = GameState(
-    gameInfo=initGameInfo, roundInfo=initRoundInfo
+    gameInfo=initGameInfo,
+    roundInfo=initRoundInfo,
+    randGen=new Random
   )
 
   val suits = Seq(Diamond, Heart, Club, Spade)
   val ranks = Seq(Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace)
   val deck:Deck = newDeck(ranks,suits)
-  val shuffledDeck = shuffleDeck(deck)
+  val shuffledDeck = shuffleDeck(deck,initialState.randGen)
+  // val card1: Card = drawCard(shuffledDeck)._2
 
   def result: StateTReaderTEither[GameState] = for {
       res  <- materialisedGame(5)
