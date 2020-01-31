@@ -43,22 +43,19 @@ case object Ace extends Rank  {val value = 14}
 
 trait DeckServiceInterface {
     type Deck = Seq[Card]
+    implicit val suits = Seq(Diamond, Heart, Club, Spade)
+    implicit val ranks = Seq(Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace)
 
-    def newDeck(ranks:Seq[Rank], suits:Seq[Suit]):Deck = for {
+    def newDeck():Deck = for {
         s <- suits
         r <- ranks
     } yield Card(r,s)
 
-    def shuffleDeck(deck: Deck, randGen:Random):Deck = randGen.shuffle(deck) //not shufflling correctly
+    def shuffleDeck(deck: Deck, randGen:Random):Deck = randGen.shuffle(deck) //TODO: check if shuffling correctly
     
-    def drawCard:Function[Deck, Option[(Deck, Card)]] = { //new  version
+    def drawCard:Function[Deck, Option[(Deck, Card)]] = { 
         case head +: tail => Some(tail, head)
         case _ => None
-    }
-
-    def drawCard(deck: Deck):(Deck,Card) = {
-        val card = deck.head
-        (deck.tail,card)
     }
 
     def burnCard(deck: Deck):Deck = {

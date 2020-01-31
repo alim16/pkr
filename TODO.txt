@@ -2,6 +2,7 @@ NOTES from jamie:
 *change "package object gameTypes" to just object
 * use drawCard function with option return value
 * move all of the reader, MonadState, ApplicativeAsk, into the types square brackets (will need imports), see example below
+* replace Seq with something more concrete
 
 1) add monicle to improve copying state
 

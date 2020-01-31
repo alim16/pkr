@@ -22,7 +22,7 @@ import pkr.cards.DeckService.{newDeck, shuffleDeck, Deck, drawCard}
 
 //import pkr.main.mainPackage.{GameResult, GameState, Db, Failure} //TODO: change, this is stupid
 
-package object gameTypes {
+ object gameTypes {
   sealed case class Failure()
 
   type GameResult = GameState
@@ -42,7 +42,7 @@ package object gameTypes {
   case class RoundInfo(
     currentPlayers: Seq[Player],
     //dealer: Player,
-    //currentDeck: Deck,
+    currentDeck: Deck,
     currentDeckLength: Int, //TODO: remove later, just for testing 
     potAmount: Double,
     boardCards: Seq[Card],
@@ -66,18 +66,20 @@ trait GameServiceInterface{
               A: ApplicativeAsk[F, Db],
               E: FunctorRaise[F, Failure]
       ): F[GameState] = {
-          val n = nRounds
+          val n = 5
           for {
+            _ <- IO(println("Please enter number of rounds to run...")).to[F]
+            n <- IO(scala.io.StdIn.readInt).to[F]
             _ <- S.modify(modState_emptyDeck(_))
             state <- S.get
-           _ <- repeatNtimes(runRound[F],5)
+           _ <- repeatNtimes(runRound[F],n)
             readval <- A.reader(_.s.map(s => s))
             //resultState <- E.raise[GameState](Failure("problem!"))
             //resultState <- E.raise[GameState](someError())
             resultState <- S.get
             _ <- IO(println("####value from the reader is: "+readval)).to[F]
-            _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "someName",
-                      state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
+           // _ <- insertValues(state.gameInfo.initialNumberOfPlayers, "someName",
+             //         state.gameInfo.currentRoundNumber).to[F] //TODO: add check for succes and if not raise dbFailure
         } yield resultState
     }
 
@@ -89,10 +91,11 @@ trait GameServiceInterface{
         for{
             currentState <- S.get
             _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
+            _ <- IO(println(s"number of cards in deck: ##### ${currentState.roundInfo.currentDeck.length}")).to[F]
             _ <- S.modify(modState_incrementRound(_))
             _ <- S.modify(modState_updateBoardCards(_))
             res <- S.get
-            _ <- IO(println(res)).to[F]
+          //  _ <- IO(println(res)).to[F]
         } yield res
     }
 
@@ -109,12 +112,23 @@ trait GameServiceInterface{
       (currentRound compose gameInfo ).modify(_ + 1)(state)
     }
 
-    def modState_updateBoardCards(state:GameState):GameState = { //TODO: drawCards from deck and update deck
+    def modState_updateBoardCards(state:GameState):GameState = {
       val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
       val boardCards: Lens[RoundInfo,Seq[Card]] = GenLens[RoundInfo](_.boardCards)
-      val cardList: Seq[Card] = List(Card(Three,Heart), Card(Jack, Diamond), Card(Ten,Club))
-     // val someCards: Seq[Card] = List(drawCard(state.roundInfo.currentDeck)._2)
-      (boardCards compose roundInfo ).set(state.randGen.shuffle(cardList))(state)
+      val deck: Lens[RoundInfo,Deck] = GenLens[RoundInfo](_.currentDeck)
+      //val cardList: Seq[Card] = List(Card(Three,Heart), Card(Jack, Diamond), Card(Ten,Club))
+      val maybeCards: Option[(Seq[Card],Deck)] = for {
+         (newDeck1,card1) <- drawCard(state.roundInfo.currentDeck)
+         (newDeck2,card2) <- drawCard(newDeck1)
+         (newDeck3,card3) <- drawCard(newDeck2)
+      } yield (Seq(card1,card2,card3), newDeck3)
+
+      val cardsAndDeck: (Seq[Card],Deck) = maybeCards.getOrElse((List(),
+      (state.roundInfo.currentDeck))) //TODO: change, getOrElse bad
+
+      (deck compose roundInfo ).set(cardsAndDeck._2)(state)
+
+      //(boardCards compose roundInfo ).set(state.randGen.shuffle(cardsAndDeck._1))(state)
     }
 
     def repeatNtimes[F[_]: Monad](f: () => F[GameState], n: Int)( //TODO: replace this function with something decent

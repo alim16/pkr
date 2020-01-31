@@ -48,7 +48,7 @@ object Program extends App with PkrService{
   val initRoundInfo: RoundInfo = RoundInfo(
     currentPlayers = initialisePlayers(4), //need to add all players at start
     currentDeckLength = 52,
-   // currentDeck = shuffledDeck,
+    currentDeck = newDeck(),
     potAmount = 0,
     boardCards = Seq(),
     roundStage = "startRound"
@@ -61,10 +61,10 @@ object Program extends App with PkrService{
     randGen=new Random
   )
 
-  val suits = Seq(Diamond, Heart, Club, Spade)
-  val ranks = Seq(Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace)
-  val deck:Deck = newDeck(ranks,suits)
-  val shuffledDeck = shuffleDeck(deck,initialState.randGen)
+  // val suits = Seq(Diamond, Heart, Club, Spade)
+  // val ranks = Seq(Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace)
+  //val deck:Deck = newDeck(ranks,suits)
+  //val shuffledDeck = shuffleDeck(deck,initialState.randGen)
   // val card1: Card = drawCard(shuffledDeck)._2
 
   def result: StateTReaderTEither[GameState] = for {
