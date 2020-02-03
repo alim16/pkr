@@ -68,7 +68,7 @@ trait GameServiceInterface{
       ): F[GameState] = {
           val n = 5
           for {
-            _ <- IO(println("Please enter number of rounds to run...")).to[F]
+            _ <- IO(println("### Please enter number of rounds to run...")).to[F]
             n <- IO(scala.io.StdIn.readInt).to[F]
             _ <- S.modify(modState_emptyDeck(_))
             state <- S.get
@@ -91,7 +91,7 @@ trait GameServiceInterface{
         for{
             currentState <- S.get
             _ <- IO(println(s"current round is: ##### ${currentState.gameInfo.currentRoundNumber}")).to[F]
-            _ <- IO(println(s"number of cards in deck: ##### ${currentState.roundInfo.currentDeck.length}")).to[F]
+            _ <- IO(println(s"number of cards in deck at start of Round: ##### ${currentState.roundInfo.currentDeck.length}")).to[F]
             _ <- S.modify(modState_incrementRound(_))
             _ <- S.modify(modState_updateBoardCards(_))
             res <- S.get
@@ -100,23 +100,17 @@ trait GameServiceInterface{
     }
 
     def modState_emptyDeck(state:GameState):GameState = {//TODO: change this to actually empty the card deck
-      val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
-      val deckLength: Lens[RoundInfo,Int] = GenLens[RoundInfo](_.currentDeckLength)
+      import pkr.myLenses.stateLenses._
       (deckLength compose roundInfo ).set( 0)(state)
       ///state.copy(roundInfo=state.roundInfo.copy(currentDeckLength=0)) 
     }
     def modState_incrementRound(state:GameState):GameState = {
-      val gameInfo: Lens[GameState, GameInfo] = GenLens[GameState](_.gameInfo)
-      val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
-      val currentRound: Lens[GameInfo,Int] = GenLens[GameInfo](_.currentRoundNumber)
+      import pkr.myLenses.stateLenses._
       (currentRound compose gameInfo ).modify(_ + 1)(state)
     }
 
     def modState_updateBoardCards(state:GameState):GameState = {
-      val roundInfo: Lens[GameState, RoundInfo] = GenLens[GameState](_.roundInfo)
-      val boardCards: Lens[RoundInfo,Seq[Card]] = GenLens[RoundInfo](_.boardCards)
-      val deck: Lens[RoundInfo,Deck] = GenLens[RoundInfo](_.currentDeck)
-      //val cardList: Seq[Card] = List(Card(Three,Heart), Card(Jack, Diamond), Card(Ten,Club))
+      import pkr.myLenses.stateLenses._
       val maybeCards: Option[(Seq[Card],Deck)] = for {
          (newDeck1,card1) <- drawCard(state.roundInfo.currentDeck)
          (newDeck2,card2) <- drawCard(newDeck1)
@@ -134,7 +128,7 @@ trait GameServiceInterface{
     def repeatNtimes[F[_]: Monad](f: () => F[GameState], n: Int)( //TODO: replace this function with something decent
       implicit S: MonadState[F, GameState]): F[GameState]= { 
       n match {
-        case n if n <= 1 => for {s <- S.get} yield s  
+        case n if n < 1 => for {s <- S.get} yield s  
         case _ => for {
           _ <- repeatNtimes(f,n-1)
           res <- f()

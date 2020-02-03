@@ -4,20 +4,22 @@ NOTES from jamie:
 * move all of the reader, MonadState, ApplicativeAsk, into the types square brackets (will need imports), see example below
 * replace Seq with something more concrete
 
-1) add monicle to improve copying state
+1) add monicle to improve copying state ###this is done
 
 2) create state machine for round stages
 
-3) add random generator to state
+3) add random generator to state ###this is done
 
-4) improve print of gameState
+4) improve printing of gameState
 
-5) fix tests
+5) fix tests and more###PRIORITY
 
-6) improve documentation add a draw.io diagram
+6) add http4s and a frontend with react
+
+7) improve documentation add a draw.io diagram
 
 
-*fix equality of cards (for sorting only rank matters)
+*fix equality of cards (for sorting, only rank matters)
 *consider using akka actors for players
 
 
