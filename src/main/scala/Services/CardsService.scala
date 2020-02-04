@@ -53,14 +53,17 @@ trait DeckServiceInterface {
 
     def shuffleDeck(deck: Deck, randGen:Random):Deck = randGen.shuffle(deck) //TODO: check if shuffling correctly
     
+    //TODO: write tests for this
     def drawCard:Function[Deck, Option[(Deck, Card)]] = { 
         case head +: tail => Some(tail, head)
         case _ => None
     }
 
-    def burnCard(deck: Deck):Deck = {
-        deck.head
-        return deck.tail
+    //TODO: write tests for this
+    //TODO: why this returning Option[Deck] only work with this signature?
+    def burnCard:Function[Deck, Option[Deck]] = {
+        case head +: tail => Some(tail)
+        case _ => None
     }
 
  }

@@ -12,6 +12,7 @@ trait HandsInterface {
         //pick the first in the list, compare with all others, if another hand beats it
         //remove this hand from list and repeat with winning hand
 
+    
     def compareTwoHands(hand1: Hand, hand2: Hand): Hand = ???
 
     //TODO: check if this is correct
