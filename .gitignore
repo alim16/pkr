@@ -7,3 +7,11 @@ build/
 #metals plugin
 .metals/
 .bloop/
+
+
+# intellij idea
+*.log
+*.iml
+*.ipr
+*.iws
+.idea
